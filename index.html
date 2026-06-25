@@ -168,6 +168,7 @@
     line-height: 1.5;
   }
   .banner.error { background: #fdeae7; color: #a32f1c; display: block; }
+  .banner.warn { background: #fff4e0; color: #8a5a00; display: block; }
 </style>
 </head>
 <body>
@@ -196,6 +197,7 @@
 
     <!-- RESULT -->
     <div id="resultView" class="result">
+      <div id="resultBanner" class="banner"></div>
       <div class="id-tag">Purifier ID</div>
       <div class="id-value" id="idValue">—</div>
       <div class="qr-wrap"><canvas id="qrCanvas"></canvas></div>
@@ -253,7 +255,15 @@
         body: JSON.stringify({ name, phone })
       });
       const data = await res.json();
+      if (data.duplicate) {
+        showResult(data.purifierId, data.name || name, phone, data.createdAt);
+        const rb = document.getElementById("resultBanner");
+        rb.className = "banner warn";
+        rb.textContent = data.error;
+        return;
+      }
       if (!data.ok) throw new Error(data.error || "Server error");
+      setError("");
       showResult(data.purifierId, name, phone, data.createdAt);
     } catch (e) {
       setError("Could not reach the registry. Check the script URL and your connection. (" + e.message + ")");
@@ -291,6 +301,9 @@
   }
 
   function resetForm() {
+    const rb = document.getElementById("resultBanner");
+    rb.style.display = "none";
+    rb.className = "banner";
     document.getElementById("name").value = "";
     document.getElementById("phone").value = "";
     document.getElementById("resultView").style.display = "none";
