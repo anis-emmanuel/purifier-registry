@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purifier Registration</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<style>
+  :root {
+    --ink: #0d2818;
+    --paper: #f3f6f4;
+    --water: #1d9d8f;
+    --water-deep: #0f6e63;
+    --mist: #d7e6e2;
+    --line: #c2d4cf;
+    --signal: #e8513a;
+    --muted: #5a7068;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    background:
+      radial-gradient(circle at 20% 0%, #e3efec 0%, transparent 45%),
+      radial-gradient(circle at 90% 100%, #dcebe7 0%, transparent 40%),
+      var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 440px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px -30px rgba(15,110,99,0.45);
+  }
+  .head {
+    padding: 30px 32px 26px;
+    background: linear-gradient(135deg, var(--water-deep), var(--water));
+    color: #eafaf7;
+    position: relative;
+  }
+  .head .eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    font-weight: 600;
+  }
+  .head h1 {
+    font-size: 26px;
+    font-weight: 700;
+    margin-top: 8px;
+    letter-spacing: -0.5px;
+  }
+  .head p { font-size: 13px; opacity: 0.85; margin-top: 6px; }
+  .body { padding: 28px 32px 34px; }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 7px;
+  }
+  .field { margin-bottom: 20px; }
+  input {
+    width: 100%;
+    padding: 13px 15px;
+    font-size: 15px;
+    border: 1.5px solid var(--line);
+    border-radius: 11px;
+    background: var(--paper);
+    color: var(--ink);
+    transition: border-color 0.15s, background 0.15s;
+    font-family: inherit;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--water);
+    background: #fff;
+  }
+  input::placeholder { color: #9bb0aa; }
+  .err {
+    font-size: 12px;
+    color: var(--signal);
+    margin-top: 6px;
+    display: none;
+  }
+  button {
+    width: 100%;
+    padding: 15px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: #fff;
+    background: var(--water-deep);
+    border: none;
+    border-radius: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, transform 0.05s;
+  }
+  button:hover:not(:disabled) { background: #0a564d; }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+  .result {
+    display: none;
+    text-align: center;
+    animation: rise 0.4s ease;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .id-tag {
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .id-value {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--water-deep);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 22px;
+  }
+  .qr-wrap {
+    display: inline-block;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    margin-bottom: 8px;
+  }
+  .qr-wrap canvas { display: block; }
+  .meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 14px 0 22px;
+    line-height: 1.6;
+  }
+  .meta strong { color: var(--ink); font-weight: 600; }
+  .actions { display: flex; gap: 10px; }
+  .actions button { flex: 1; }
+  .ghost {
+    background: #fff;
+    color: var(--water-deep);
+    border: 1.5px solid var(--line);
+  }
+  .ghost:hover:not(:disabled) { background: var(--paper); }
+  .banner {
+    display: none;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+  .banner.error { background: #fdeae7; color: #a32f1c; display: block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="eyebrow">Purifier Registry</div>
+    <h1>Register a Purifier</h1>
+    <p>Enter customer details to issue a Purifier ID and QR code.</p>
+  </div>
+  <div class="body">
+    <!-- FORM -->
+    <div id="formView">
+      <div id="banner" class="banner"></div>
+      <div class="field">
+        <label for="name">Customer name</label>
+        <input id="name" type="text" placeholder="e.g. Anita Sharma" autocomplete="name">
+        <div class="err" id="nameErr">Please enter a name.</div>
+      </div>
+      <div class="field">
+        <label for="phone">Phone number</label>
+        <input id="phone" type="tel" placeholder="e.g. 9876543210" autocomplete="tel">
+        <div class="err" id="phoneErr">Enter a valid phone number.</div>
+      </div>
+      <button id="submitBtn" onclick="submitForm()">Generate Purifier ID</button>
+    </div>
+
+    <!-- RESULT -->
+    <div id="resultView" class="result">
+      <div class="id-tag">Purifier ID</div>
+      <div class="id-value" id="idValue">—</div>
+      <div class="qr-wrap"><canvas id="qrCanvas"></canvas></div>
+      <div class="meta" id="metaInfo"></div>
+      <div class="actions">
+        <button class="ghost" onclick="downloadQR()">Download QR</button>
+        <button onclick="resetForm()">Register another</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ====== CONFIG ======
+  // Paste your deployed Google Apps Script Web App URL here:
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2NkwjZCXrmCsWUhzwF7QrEZQ5SAfLnz33w3ifFILnYKI6TjeUmkOEFMUcvGkwt1adsg/exec";
+
+  let lastID = "";
+
+  function setError(msg) {
+    const b = document.getElementById("banner");
+    if (!msg) { b.style.display = "none"; return; }
+    b.className = "banner error";
+    b.textContent = msg;
+    b.style.display = "block";
+  }
+
+  function validate() {
+    let ok = true;
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    document.getElementById("nameErr").style.display = name ? "none" : "block";
+    if (!name) ok = false;
+    const phoneOk = /^[+\d][\d\s\-]{6,}$/.test(phone);
+    document.getElementById("phoneErr").style.display = phoneOk ? "none" : "block";
+    if (!phoneOk) ok = false;
+    return ok;
+  }
+
+  async function submitForm() {
+    setError("");
+    if (!validate()) return;
+
+    const btn = document.getElementById("submitBtn");
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+
+    btn.disabled = true;
+    btn.textContent = "Generating…";
+
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ name, phone })
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Server error");
+      showResult(data.purifierId, name, phone, data.createdAt);
+    } catch (e) {
+      setError("Could not reach the registry. Check the script URL and your connection. (" + e.message + ")");
+      btn.disabled = false;
+      btn.textContent = "Generate Purifier ID";
+    }
+  }
+
+  function showResult(id, name, phone, createdAt) {
+    lastID = id;
+    document.getElementById("formView").style.display = "none";
+    const r = document.getElementById("resultView");
+    r.style.display = "block";
+    document.getElementById("idValue").textContent = id;
+
+    new QRious({
+      element: document.getElementById("qrCanvas"),
+      value: id,
+      size: 200,
+      level: "H",
+      foreground: "#0f6e63",
+      background: "#ffffff"
+    });
+
+    document.getElementById("metaInfo").innerHTML =
+      "<strong>" + escapeHtml(name) + "</strong> · " + escapeHtml(phone) +
+      "<br>Created " + new Date(createdAt).toLocaleString();
+  }
+
+  function downloadQR() {
+    const link = document.createElement("a");
+    link.download = lastID + ".png";
+    link.href = document.getElementById("qrCanvas").toDataURL("image/png");
+    link.click();
+  }
+
+  function resetForm() {
+    document.getElementById("name").value = "";
+    document.getElementById("phone").value = "";
+    document.getElementById("resultView").style.display = "none";
+    document.getElementById("formView").style.display = "block";
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = false;
+    btn.textContent = "Generate Purifier ID";
+    document.getElementById("name").focus();
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c =>
+      ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+  }
+</script>
+</body>
+</html>
